@@ -30,6 +30,8 @@ class Reader(object):
 	
 	def read_date(self):
 		(year, month, day, hour, minute, second, tz) = ((x & 15) * 10 + (x >> 4) for x in read_bytes(self._file, 7))
+		if year == month == day == hour == minute == second == tz == 0:
+			return None
 		if year < 1980:
 			year += 2000
 		if tz & 128:
