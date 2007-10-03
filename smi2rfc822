@@ -1,0 +1,214 @@
+#!/usr/bin/python
+
+from sys import stdin
+from common import Reader, read_byte, read_bytes
+from dcs import DataCodingScheme
+
+class CorruptedSmi(Exception):
+	pass
+
+class SmsType(object):
+	aka = '?'
+	def __str__(self):
+		return self.aka
+
+class SmsTypeDeliver(SmsType):
+	aka = 'deliver'
+
+class SmsTypeSubmit(SmsType):
+	aka = 'submit'
+
+SMS_TYPE_DELIVER = SmsTypeDeliver()
+SMS_TYPE_SUBMIT = SmsTypeSubmit()
+
+class Status(object):
+	aka = '?'
+	def __str__(self):
+		return self.aka
+
+class StatusRead(Status):
+	aka = 'read'
+
+class StatusUnread(Status):
+	aka = 'unread'
+
+class StatusSent(Status):
+	aka = 'unread'
+
+class StatusUnsent(Status):
+	aka = 'unsent'
+
+STATUS_READ = StatusRead()
+STATUS_UNREAD = StatusUnread()
+STATUS_SENT = StatusSent()
+STATUS_UNSENT = StatusUnsent()
+
+class Number(object):
+
+	def __init__(self, type, value):
+		if type != 0x91:
+			raise CorruptedSmi
+		self.value = value
+	
+	def __str__(self):
+		return '<tel:%s>' % self.value
+
+class Segment(Reader):
+	status_map = \
+	{
+		1: STATUS_READ,
+		3: STATUS_UNREAD,
+		5: STATUS_SENT,
+		7: STATUS_UNSENT
+	}
+
+	def __init__(self, file):
+		Reader.__init__(self, file)
+		self.status = self.read_status()
+		self.smsc_address = self.read_address()
+		self.pdu_header = self.read_pdu_header()
+		self.sender = self.read_address(variant = True)
+		self.pid = self.read_pid()
+		self.dcs = self.read_dcs()
+		self.date = self.read_date()
+		self.message = self.dcs.read()
+		self.read_waste()
+
+	def read_status(self):
+		tp = read_byte(self._file)
+		return self.status_map[tp]
+
+	def read_address(self, variant = False):
+		nbytes = read_byte(self._file)
+		if variant:
+			nbytes = 1 + (nbytes + 1) // 2
+		if nbytes == 0:
+			raise CorruptedSmi
+		tp = read_byte(self._file)
+		if tp != 0x91:
+			raise CorruptedSmi
+		value = ''.join('%1x%1x' % ((x & 15), x >> 4) for x in read_bytes(self._file, nbytes - 1)).rstrip('f')
+		return Number(tp, value)
+	
+	def read_pdu_header(self):
+		return read_byte(self._file)
+
+	def read_pid(self):
+		return read_byte(self._file)
+	
+	def read_dcs(self):
+		return DataCodingScheme(self._file)
+
+	def read_waste(self):
+		pass
+
+	def __str__(self):
+		return '\n'.join(
+		[
+			'X-Sms-Center: %s' % self.smsc_address,
+			'From: %s' % self.sender,
+			'Date: %s' % self.date,
+			'Message: %s' % self.message
+		])
+
+class Smi(Reader):
+	smi_map = {}
+	sms_type_map = \
+	{
+		0: SMS_TYPE_DELIVER,
+		3: SMS_TYPE_SUBMIT
+	}
+	sms_status_map = \
+	{
+		0: STATUS_READ,
+		1: STATUS_UNREAD,
+		3: STATUS_SENT,
+		4: STATUS_UNSENT
+	}
+
+	have_waste_byte = True
+
+	@staticmethod
+	def register(*subclasses):
+		for subclass in subclasses:
+			Smi.smi_map[subclass.code] = subclass
+	
+	def __new__(cls, file):
+		code = tuple(read_bytes(file, 5))
+		return object.__new__(Smi.smi_map[code], file)
+	
+	def __init__(self, file):
+		Reader.__init__(self, file)
+		sms_parts = self.read_sms_parts()
+		self.sms_type = self.read_sms_type()
+		self.sms_status = self.read_sms_status()
+		self.sms_date = self.read_date()
+		self.read_waste_byte()
+		self.segments = [self.read_segment() for i in xrange(sms_parts)]
+
+	def read_segment(self):
+		return Segment(self._file)
+
+	def read_sms_parts(self):
+		n1, n2 = read_bytes(self._file, 2)
+		if n1 != n2:
+			raise CorruptedSmi
+		else:
+			return n1
+
+	def read_sms_type(self):
+		tp = read_byte(self._file)
+		return self.sms_type_map[tp]
+
+	def read_sms_status(self):
+		tp = read_byte(self._file)
+		return self.sms_status_map[tp]
+
+	def read_waste_byte(self):
+		pass
+	
+	def __str__(self):
+		return '\n'.join(
+		[
+			'X-Smi-Version: %d' % self.version,
+			'X-Sms-Type: %s' % self.sms_type,
+			'X-Sms-Status: %s' % self.sms_status,
+			'Date: %s' % self.sms_date
+		]) + '\n\n' + '\n\n'.join(str(segment) for segment in self.segments)
+
+class SmiSL4x(Smi):
+	version = 0
+	code = (11, 11, 0, 0, 0)
+
+	def read_sms_parts(file):
+		return 1
+	
+	def read_sms_type(self):
+		return None
+
+	def read_sms_status(self):
+		return None
+
+	have_timestamp = False
+
+class SmiX45(Smi):
+	version = 1
+	code = (11, 11, 1, 1, 0)
+
+class SmiX55(Smi):
+	version = 2
+	code = (11, 11, 2, 12, 0)
+	
+	def read_waste_byte(self):
+		read_byte(self._file)
+
+Smi.register(SmiSL4x, SmiX45, SmiX55)
+
+def main():
+	smi = Smi(stdin)
+	print smi
+
+if __name__ == '__main__':
+	main()
+
+# vim:ts=4 sw=4 noet
