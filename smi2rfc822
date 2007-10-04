@@ -61,15 +61,15 @@ class Segment(Reader):
 		return Pdu(self._file)
 
 	def read_status(self):
-		tp = read_byte(self._file)
+		tp = self.next()
 		return self.status_map[tp]
 	
 	def read_waste(self):
 		nbytes = 176 - (self._file.tell() - self._offset)
-		bytes = read_bytes(self._file, nbytes)
+		bytes = self.next(nbytes)
 		if len(bytes) != nbytes:
 			raise CorruptedSmi
-		for byte in read_bytes(self._file, nbytes):
+		for byte in bytes:
 			if byte != 0xff:
 				raise CorruptedSmi
 		pass
@@ -117,18 +117,18 @@ class Smi(Reader):
 		return Segment(self._file)
 
 	def read_sms_parts(self):
-		n1, n2 = read_bytes(self._file, 2)
+		n1, n2 = self.next(2)
 		if n1 != n2:
 			raise CorruptedSmi
 		else:
 			return n1
 
 	def read_sms_type(self):
-		tp = read_byte(self._file)
+		tp = self.next()
 		return self.sms_type_map[tp]
 
 	def read_sms_status(self):
-		tp = read_byte(self._file)
+		tp = self.next()
 		return self.sms_status_map[tp]
 
 	def read_waste_byte(self):
@@ -167,7 +167,7 @@ class SmiX55(Smi):
 	code = (11, 11, 2, 12, 0)
 	
 	def read_waste_byte(self):
-		read_byte(self._file)
+		self.next()
 
 Smi.register(SmiSL4x, SmiX45, SmiX55)
 

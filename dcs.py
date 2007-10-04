@@ -74,11 +74,11 @@ class Scheme7(DataCodingScheme):
 	}
 
 	def read(self):
-		nseptets = read_byte(self._file)
+		nseptets = self.next()
 		nbytes = (nseptets * 7 + 7) // 8
 		output = []
 		while nbytes > 0:
-			quantum = read_bytes(self._file, min(7, nbytes))
+			quantum = self.next(min(7, nbytes))
 			value = 0
 			for x in reversed(quantum):
 				value <<= 8
@@ -100,13 +100,13 @@ class Scheme7(DataCodingScheme):
 class Scheme8(DataCodingScheme):
 	code = 1
 	def read(self):
-		nbytes = read_byte(self._file)
+		nbytes = self.next()
 		return self._file.read(nbytes).decode('ISO-8859-1')
 
 class Scheme16(DataCodingScheme):
 	code = 2
 	def read(self):
-		nbytes = read_byte(self._file) * 2
+		nbytes = self.next() * 2
 		return self._file.read(nbytes).decode('UCS-2')
 
 DataCodingScheme.register(Scheme7, Scheme8, Scheme16)

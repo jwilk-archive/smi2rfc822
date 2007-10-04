@@ -32,7 +32,7 @@ class Reader(object):
 		self._file = file
 	
 	def read_date(self):
-		(year, month, day, hour, minute, second, tz) = ((x & 15) * 10 + (x >> 4) for x in read_bytes(self._file, 7))
+		(year, month, day, hour, minute, second, tz) = ((x & 15) * 10 + (x >> 4) for x in self.next(7))
 		if year == month == day == hour == minute == second == tz == 0:
 			return None
 		if year < 1980:
@@ -43,14 +43,20 @@ class Reader(object):
 		return datetime(year, month, day, hour, minute, second, tzinfo = tz)
 
 	def read_address(self, variant = False):
-		nbytes = read_byte(self._file)
+		nbytes = self.next()
 		if variant:
 			nbytes = 1 + (nbytes + 1) // 2
 		if nbytes == 0:
 			raise CorruptedSmi('Invalid adress length')
-		tp = read_byte(self._file)
-		value = ''.join('%1x%1x' % ((x & 15), x >> 4) for x in read_bytes(self._file, nbytes - 1)).rstrip('f')
+		tp = self.next()
+		value = ''.join('%1x%1x' % ((x & 15), x >> 4) for x in self.next(nbytes - 1)).rstrip('f')
 		return Number(tp, value)
+
+	def next(self, nbytes = None):
+		if nbytes is None:
+			return read_byte(self._file)
+		else:
+			return read_bytes(self._file, nbytes)
 
 class Number(object):
 

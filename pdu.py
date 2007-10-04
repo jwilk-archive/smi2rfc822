@@ -1,4 +1,4 @@
-from common import Reader, read_byte, read_bytes
+from common import Reader, read_byte
 from dcs import DataCodingScheme
 
 __all__ = ('Unit',)
@@ -22,7 +22,7 @@ class Unit(Reader):
 		Reader.__init__(self, file)
 
 	def read_pid(self):
-		return read_byte(self._file)
+		return self.next()
 
 	def read_dcs(self):
 		return DataCodingScheme(self._file)
@@ -79,7 +79,7 @@ class _Deliver(Unit):
 	class RelativeVerifyFormat(VerifyFormat):
 		def read(self):
 			from datetime import timedelta
-			byte = read_byte(self._file)
+			byte = self.next()
 			if byte <= 143:
 				return timedelta(minutes = (byte + 1) * 5)
 			elif byte <= 167:
@@ -91,12 +91,12 @@ class _Deliver(Unit):
 	
 	class EnhancedVerifyFormat(VerifyFormat):
 		def read(self):
-			read_bytes(self._file, 7)
+			self.next(7)
 			return NotImplemented
 	
 	class AbsoluteVerifyFormat(VerifyFormat):
 		def read(self):
-			read_bytes(self._file, 7)
+			self.next(7)
 			return NotImplemented
 
 	code = 1
@@ -119,7 +119,7 @@ class _Deliver(Unit):
 		self.message = self.dcs.read()
 
 	def read_reference(self):
-		return read_byte(self._file)
+		return self.next()
 
 	def read_validity_period(self):
 		return self.validity_period_format.read()
