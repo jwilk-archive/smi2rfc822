@@ -64,7 +64,8 @@ class _Submit(Unit):
 		[
 			'From: %s' % self.sender,
 			'Date: %s' % self.date,
-			'Message: %s' % self.message
+			'Content-Type: text/plain; charset=UTF-8',
+			'\n%s' % self.message.encode('UTF-8')
 		])
 
 class _Deliver(Unit):
@@ -135,7 +136,8 @@ class _Deliver(Unit):
 		[
 			'To: %s' % self.recipient,
 			'X-Validity-Period: %s' % self.validity_period,
-			'Message: %s' % self.message
+			'Content-Type: text/plain; charset=UTF-8',
+			'\n%s' % self.message
 		])
 		
 
