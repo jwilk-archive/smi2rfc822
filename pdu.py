@@ -1,4 +1,4 @@
-from common import Reader, read_byte
+from common import Reader, read_byte, read_bytes
 from dcs import DataCodingScheme
 
 __all__ = ('Unit',)
