@@ -46,8 +46,8 @@ STATUS_UNSENT = StatusUnsent()
 class Number(object):
 
 	def __init__(self, type, value):
-		if type != 0x91:
-			raise CorruptedSmi
+		if type not in (0x00, 0x91):
+			raise CorruptedSmi('Invalid adress type (0x%02x)' % tp)
 		self.value = value
 	
 	def __str__(self):
@@ -83,10 +83,8 @@ class Segment(Reader):
 		if variant:
 			nbytes = 1 + (nbytes + 1) // 2
 		if nbytes == 0:
-			raise CorruptedSmi
+			raise CorruptedSmi('Invalid adress lenth')
 		tp = read_byte(self._file)
-		if tp != 0x91:
-			raise CorruptedSmi
 		value = ''.join('%1x%1x' % ((x & 15), x >> 4) for x in read_bytes(self._file, nbytes - 1)).rstrip('f')
 		return Number(tp, value)
 	
