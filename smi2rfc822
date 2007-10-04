@@ -51,9 +51,11 @@ class Segment(Reader):
 
 	def __init__(self, file):
 		Reader.__init__(self, file)
+		self._offset = file.tell()
 		self.status = self.read_status()
 		self.smsc_address = self.read_address()
 		self.pdu = self.read_pdu()
+		self.read_waste()
 
 	def read_pdu(self):
 		return Pdu(self._file)
@@ -61,6 +63,17 @@ class Segment(Reader):
 	def read_status(self):
 		tp = read_byte(self._file)
 		return self.status_map[tp]
+	
+	def read_waste(self):
+		nbytes = 176 - (self._file.tell() - self._offset)
+		bytes = read_bytes(self._file, nbytes)
+		if len(bytes) != nbytes:
+			raise CorruptedSmi
+		for byte in read_bytes(self._file, nbytes):
+			if byte != 0xff:
+				raise CorruptedSmi
+		pass
+
 
 	def __str__(self):
 		return 'X-Sms-Center: %s\n%s' % (self.smsc_address, self.pdu)

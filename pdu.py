@@ -21,9 +21,6 @@ class Unit(Reader):
 	def __init__(self, file):
 		Reader.__init__(self, file)
 
-	def read_waste(self):
-		pass
-
 	def read_pid(self):
 		return read_byte(self._file)
 
@@ -56,7 +53,6 @@ class _Submit(Unit):
 		self.dcs = self.read_dcs()
 		self.date = self.read_date()
 		self.message = self.dcs.read()
-		self.read_waste()
 	
 	def update_first_byte(self):
 		first_byte = self._first_byte
@@ -121,7 +117,6 @@ class _Deliver(Unit):
 		self.dcs = self.read_dcs()
 		self.validity_period = self.read_validity_period()
 		self.message = self.dcs.read()
-		self.read_waste()
 
 	def read_reference(self):
 		return read_byte(self._file)
