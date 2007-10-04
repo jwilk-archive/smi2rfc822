@@ -1,11 +1,8 @@
 #!/usr/bin/python
 
 from sys import stdin
-from common import Reader, read_byte, read_bytes
-from dcs import DataCodingScheme
-
-class CorruptedSmi(Exception):
-	pass
+from common import Reader, CorruptedSmi, read_byte, read_bytes
+from pdu import Unit as Pdu
 
 class SmsType(object):
 	aka = '?'
@@ -43,16 +40,6 @@ STATUS_UNREAD = StatusUnread()
 STATUS_SENT = StatusSent()
 STATUS_UNSENT = StatusUnsent()
 
-class Number(object):
-
-	def __init__(self, type, value):
-		if type not in (0x00, 0x91):
-			raise CorruptedSmi('Invalid adress type (0x%02x)' % tp)
-		self.value = value
-	
-	def __str__(self):
-		return '<tel:%s>' % self.value
-
 class Segment(Reader):
 	status_map = \
 	{
@@ -66,48 +53,17 @@ class Segment(Reader):
 		Reader.__init__(self, file)
 		self.status = self.read_status()
 		self.smsc_address = self.read_address()
-		self.pdu_header = self.read_pdu_header()
-		self.sender = self.read_address(variant = True)
-		self.pid = self.read_pid()
-		self.dcs = self.read_dcs()
-		self.date = self.read_date()
-		self.message = self.dcs.read()
-		self.read_waste()
+		self.pdu = self.read_pdu()
+
+	def read_pdu(self):
+		return Pdu(self._file)
 
 	def read_status(self):
 		tp = read_byte(self._file)
 		return self.status_map[tp]
 
-	def read_address(self, variant = False):
-		nbytes = read_byte(self._file)
-		if variant:
-			nbytes = 1 + (nbytes + 1) // 2
-		if nbytes == 0:
-			raise CorruptedSmi('Invalid adress lenth')
-		tp = read_byte(self._file)
-		value = ''.join('%1x%1x' % ((x & 15), x >> 4) for x in read_bytes(self._file, nbytes - 1)).rstrip('f')
-		return Number(tp, value)
-	
-	def read_pdu_header(self):
-		return read_byte(self._file)
-
-	def read_pid(self):
-		return read_byte(self._file)
-	
-	def read_dcs(self):
-		return DataCodingScheme(self._file)
-
-	def read_waste(self):
-		pass
-
 	def __str__(self):
-		return '\n'.join(
-		[
-			'X-Sms-Center: %s' % self.smsc_address,
-			'From: %s' % self.sender,
-			'Date: %s' % self.date,
-			'Message: %s' % self.message
-		])
+		return 'X-Sms-Center: %s\n%s' % (self.smsc_address, self.pdu)
 
 class Smi(Reader):
 	smi_map = {}

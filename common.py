@@ -1,7 +1,10 @@
 from array import array
 from datetime import datetime, tzinfo, timedelta
 
-__all__ = ('read_byte', 'read_bytes', 'Reader')
+__all__ = ('read_byte', 'read_bytes', 'Reader', 'CorruptedSmi', 'Number')
+
+class CorruptedSmi(Exception):
+	pass
 
 def read_bytes(file, n):
 	return array('B', file.read(n))
@@ -38,5 +41,25 @@ class Reader(object):
 			-(tz & ~128)
 		tz = FixedOffsetTz(tz * 15)
 		return datetime(year, month, day, hour, minute, second, tzinfo = tz)
+
+	def read_address(self, variant = False):
+		nbytes = read_byte(self._file)
+		if variant:
+			nbytes = 1 + (nbytes + 1) // 2
+		if nbytes == 0:
+			raise CorruptedSmi('Invalid adress length')
+		tp = read_byte(self._file)
+		value = ''.join('%1x%1x' % ((x & 15), x >> 4) for x in read_bytes(self._file, nbytes - 1)).rstrip('f')
+		return Number(tp, value)
+
+class Number(object):
+
+	def __init__(self, type, value):
+		if type not in (0x00, 0x81, 0x91):
+			raise CorruptedSmi('Invalid adress type (0x%02x)' % type)
+		self.value = value
+	
+	def __str__(self):
+		return '<tel:%s>' % self.value
 
 # vim:ts=4 sw=4 noet
