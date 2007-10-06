@@ -74,7 +74,6 @@ class Segment(Reader):
 				raise CorruptedSmi
 		pass
 
-
 	def __str__(self):
 		return 'X-Sms-Center: %s\n%s' % (self.smsc_address, self.pdu)
 
