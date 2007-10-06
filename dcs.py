@@ -12,7 +12,14 @@ class DataCodingScheme(Reader):
 			DataCodingScheme.dcs_map[subclass.code] = subclass
 	
 	def __new__(cls, file):
-		code = read_byte(file)
+		byte = read_byte(file)
+		if byte & (1 << 7 | 1 << 6 | 1 << 5):
+			raise NotImplementedError('Unsupported Data Coding Scheme (0x%02d)' % byte)
+		code = (byte >> 2) & 3
+		try:
+			klass = DataCodingScheme.dcs_map[code]
+		except KeyError:
+			raise NotImplementedError('Unsupported Data Coding Scheme (0x%02d)' % byte)
 		return object.__new__(DataCodingScheme.dcs_map[code], file)
 
 class Scheme7(DataCodingScheme):
@@ -106,8 +113,8 @@ class Scheme8(DataCodingScheme):
 class Scheme16(DataCodingScheme):
 	code = 2
 	def read(self):
-		nbytes = self.next() * 2
-		return self._file.read(nbytes).decode('UCS-2')
+		nbytes = self.next()
+		return self._file.read(nbytes).decode('UTF-16BE')
 
 DataCodingScheme.register(Scheme7, Scheme8, Scheme16)
 
