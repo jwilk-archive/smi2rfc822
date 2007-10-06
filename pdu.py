@@ -137,7 +137,7 @@ class _Deliver(Unit):
 			'To: %s' % self.recipient,
 			'X-Validity-Period: %s' % self.validity_period,
 			'Content-Type: text/plain; charset=UTF-8',
-			'\n%s' % self.message
+			'\n%s' % self.message.encode('UTF-8')
 		])
 		
 
