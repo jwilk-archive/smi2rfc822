@@ -47,7 +47,8 @@ class Reader(object):
 		if variant:
 			nbytes = 1 + (nbytes + 1) // 2
 		if nbytes == 0:
-			raise CorruptedSmi('Invalid adress length')
+			return None
+			# XXX raise CorruptedSmi('Invalid adress length')
 		tp = self.next()
 		value = ''.join('%1x%1x' % ((x & 15), x >> 4) for x in self.next(nbytes - 1)).rstrip('f')
 		return Number(tp, value)
