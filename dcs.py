@@ -20,7 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from common import read_byte, read_bytes, Reader
+from common import read_byte, Reader
 import re
 
 __all__ = ('DataCodingScheme',)
