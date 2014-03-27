@@ -70,7 +70,7 @@ class Reader(object):
 			nbytes = 1 + (nbytes + 1) // 2
 		if nbytes == 0:
 			return None
-			# XXX raise CorruptedSmi('Invalid adress length')
+			# XXX raise CorruptedSmi('Invalid address length')
 		tp = self.next()
 		value = ''.join('%1x%1x' % ((x & 15), x >> 4) for x in self.next(nbytes - 1)).rstrip('f')
 		return Number(tp, value)
@@ -85,7 +85,7 @@ class Number(object):
 
 	def __init__(self, type, value):
 		if type not in (0x00, 0x81, 0x91):
-			raise CorruptedSmi('Invalid adress type (0x%02x)' % type)
+			raise CorruptedSmi('Invalid address type (0x%02x)' % type)
 		self.value = value
 
 	def __str__(self):
