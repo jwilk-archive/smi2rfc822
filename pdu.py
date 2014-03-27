@@ -4,20 +4,20 @@ from dcs import DataCodingScheme
 __all__ = ('Unit',)
 
 class Unit(Reader):
-	
+
 	pdu_map = {}
 
 	@staticmethod
 	def register(*subclasses):
 		for subclass in subclasses:
 			Unit.pdu_map[subclass.code] = subclass
-	
+
 	def __new__(cls, file):
 		first_byte = read_byte(file)
 		self = object.__new__(Unit.pdu_map[first_byte & 3], file)
 		self._first_byte = first_byte
 		return self
-	
+
 	def __init__(self, file):
 		Reader.__init__(self, file)
 
@@ -26,14 +26,14 @@ class Unit(Reader):
 
 	def read_dcs(self):
 		return DataCodingScheme(self._file)
-	
+
 	def update_first_byte(self):
 		first_byte = self._first_byte
 		del self._first_byte
 		self.have_reply_path = bool((first_byte >> 7) & 1)
 		self.have_udhi = bool((first_byte >> 6) & 1)
 		self.status_report_requested = bool((first_byte >> 5) & 1)
-	
+
 	def __str__(self):
 		return '\n'.join(
 		[
@@ -53,7 +53,7 @@ class _Submit(Unit):
 		self.dcs = self.read_dcs()
 		self.date = self.read_date()
 		self.message = self.dcs.read()
-	
+
 	def update_first_byte(self):
 		first_byte = self._first_byte
 		Unit.update_first_byte(self)
@@ -76,7 +76,7 @@ class _Deliver(Unit):
 	class NoVerifyFormat(VerifyFormat):
 		def read(self):
 			pass
-	
+
 	class RelativeVerifyFormat(VerifyFormat):
 		def read(self):
 			from datetime import timedelta
@@ -89,12 +89,12 @@ class _Deliver(Unit):
 				return timedelta(days = byte - 166)
 			else:
 				return timedelta(weeks = byte - 192)
-	
+
 	class EnhancedVerifyFormat(VerifyFormat):
 		def read(self):
 			self.next(7)
 			return NotImplemented
-	
+
 	class AbsoluteVerifyFormat(VerifyFormat):
 		def read(self):
 			self.next(7)
@@ -139,7 +139,7 @@ class _Deliver(Unit):
 			'Content-Type: text/plain; charset=UTF-8',
 			'\n%s' % self.message.encode('UTF-8')
 		])
-		
+
 
 Unit.register(_Deliver, _Submit)
 

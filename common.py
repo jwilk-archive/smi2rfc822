@@ -14,15 +14,15 @@ def read_byte(file):
 
 class FixedOffsetTz(tzinfo):
 	"""Fixed offset in minutes east from UTC."""
-	
+
 	ZERO = timedelta(0)
-	
+
 	def __init__(self, offset):
 		self.__offset = timedelta(minutes = offset)
-	
+
 	def utcoffset(self, dt):
 		return self.__offset
-	
+
 	def dst(self, dt):
 		return self.ZERO
 
@@ -30,7 +30,7 @@ class Reader(object):
 
 	def __init__(self, file):
 		self._file = file
-	
+
 	def read_date(self):
 		(year, month, day, hour, minute, second, tz) = ((x & 15) * 10 + (x >> 4) for x in self.next(7))
 		if year == month == day == hour == minute == second == tz == 0:
@@ -65,7 +65,7 @@ class Number(object):
 		if type not in (0x00, 0x81, 0x91):
 			raise CorruptedSmi('Invalid adress type (0x%02x)' % type)
 		self.value = value
-	
+
 	def __str__(self):
 		return '<tel:%s>' % self.value
 

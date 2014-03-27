@@ -10,7 +10,7 @@ class DataCodingScheme(Reader):
 	def register(*subclasses):
 		for subclass in subclasses:
 			DataCodingScheme.dcs_map[subclass.code] = subclass
-	
+
 	def __new__(cls, file):
 		byte = read_byte(file)
 		if byte & (1 << 7 | 1 << 6 | 1 << 5):

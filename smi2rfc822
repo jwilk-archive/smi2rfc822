@@ -63,7 +63,7 @@ class Segment(Reader):
 	def read_status(self):
 		tp = self.next()
 		return self.status_map[tp]
-	
+
 	def read_waste(self):
 		nbytes = 176 - (self._file.tell() - self._offset)
 		bytes = self.next(nbytes)
@@ -98,11 +98,11 @@ class Smi(Reader):
 	def register(*subclasses):
 		for subclass in subclasses:
 			Smi.smi_map[subclass.code] = subclass
-	
+
 	def __new__(cls, file):
 		code = tuple(read_bytes(file, 5))
 		return object.__new__(Smi.smi_map[code], file)
-	
+
 	def __init__(self, file):
 		Reader.__init__(self, file)
 		sms_parts = self.read_sms_parts()
@@ -132,7 +132,7 @@ class Smi(Reader):
 
 	def read_waste_byte(self):
 		pass
-	
+
 	def __str__(self):
 		return '\n'.join(
 		[
@@ -148,7 +148,7 @@ class SmiSL4x(Smi):
 
 	def read_sms_parts(file):
 		return 1
-	
+
 	def read_sms_type(self):
 		return None
 
@@ -164,7 +164,7 @@ class SmiX45(Smi):
 class SmiX55(Smi):
 	version = 2
 	code = (11, 11, 2, 12, 0)
-	
+
 	def read_waste_byte(self):
 		self.next()
 
