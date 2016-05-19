@@ -91,4 +91,4 @@ class Number(object):
 	def __str__(self):
 		return '<tel:%s>' % self.value
 
-# vim:ts=4 sw=4 noet
+# vim:ts=4 sts=4 sw=4 noet

@@ -140,4 +140,4 @@ class Scheme16(DataCodingScheme):
 
 DataCodingScheme.register(Scheme7, Scheme8, Scheme16)
 
-# vim:ts=4 sw=4 noet
+# vim:ts=4 sts=4 sw=4 noet
