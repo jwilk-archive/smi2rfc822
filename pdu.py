@@ -134,7 +134,7 @@ class _Deliver(Unit):
 	def __init__(self, file):
 		Unit.__init__(self, file)
 		self.update_first_byte()
-		self.refrence_no = self.read_reference()
+		self.reference_no = self.read_reference()
 		self.recipient = self.read_address(variant = True)
 		self.pid = self.read_pid()
 		self.dcs = self.read_dcs()
