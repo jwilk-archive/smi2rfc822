@@ -62,8 +62,7 @@ STATUS_SENT = StatusSent()
 STATUS_UNSENT = StatusUnsent()
 
 class Segment(Reader):
-    status_map = \
-    {
+    status_map = {
         1: STATUS_READ,
         3: STATUS_UNREAD,
         5: STATUS_SENT,
@@ -100,13 +99,11 @@ class Segment(Reader):
 
 class Smi(Reader):
     smi_map = {}
-    sms_type_map = \
-    {
+    sms_type_map = {
         0: SMS_TYPE_DELIVER,
         3: SMS_TYPE_SUBMIT
     }
-    sms_status_map = \
-    {
+    sms_status_map = {
         0: STATUS_READ,
         1: STATUS_UNREAD,
         3: STATUS_SENT,
@@ -155,8 +152,7 @@ class Smi(Reader):
         pass
 
     def __str__(self):
-        return '\n'.join(
-        [
+        return '\n'.join([
             'X-Smi-Version: %d' % self.version,
             'X-Sms-Type: %s' % self.sms_type,
             'X-Sms-Status: %s' % self.sms_status,

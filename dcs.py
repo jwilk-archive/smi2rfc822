@@ -46,8 +46,7 @@ class DataCodingScheme(Reader):
 
 class Scheme7(DataCodingScheme):
     code = 0
-    _mapping = \
-    {
+    _mapping = {
         '\x1b\x0a': u'\u000c',
         '\x1b\x14': u'\u005e',
         '\x1b\x28': u'\u007b',

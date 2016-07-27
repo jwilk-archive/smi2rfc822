@@ -57,8 +57,7 @@ class Unit(Reader):
         self.status_report_requested = bool((first_byte >> 5) & 1)
 
     def __str__(self):
-        return '\n'.join(
-        [
+        return '\n'.join([
             'X-Have-Reply-Path: %s' % self.have_reply_path,
             'X-Status-Report-Requested: %s' % self.status_report_requested
         ])
@@ -82,8 +81,7 @@ class _Submit(Unit):
         self.have_more_messages_to_send = bool((first_byte >> 2) & 1)
 
     def __str__(self):
-        return Unit.__str__(self) + '\n' + '\n'.join(
-        [
+        return Unit.__str__(self) + '\n' + '\n'.join([
             'From: %s' % self.sender,
             'Date: %s' % self.date,
             'Content-Type: text/plain; charset=UTF-8',
@@ -123,8 +121,7 @@ class _Deliver(Unit):
             return NotImplemented
 
     code = 1
-    verify_format_map = \
-    {
+    verify_format_map = {
         0: NoVerifyFormat,
         1: EnhancedVerifyFormat,
         2: RelativeVerifyFormat,
@@ -154,8 +151,7 @@ class _Deliver(Unit):
         self.reject_duplicates = bool((first_byte >> 2) & 1)
 
     def __str__(self):
-        return Unit.__str__(self) + '\n' + '\n'.join(
-        [
+        return Unit.__str__(self) + '\n' + '\n'.join([
             'To: %s' % self.recipient,
             'X-Validity-Period: %s' % self.validity_period,
             'Content-Type: text/plain; charset=UTF-8',
