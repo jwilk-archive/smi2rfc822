@@ -26,35 +26,35 @@ from common import Reader, CorruptedSmi, read_byte, read_bytes
 from pdu import Unit as Pdu
 
 class SmsType(object):
-	aka = '?'
-	def __str__(self):
-		return self.aka
+    aka = '?'
+    def __str__(self):
+        return self.aka
 
 class SmsTypeDeliver(SmsType):
-	aka = 'deliver'
+    aka = 'deliver'
 
 class SmsTypeSubmit(SmsType):
-	aka = 'submit'
+    aka = 'submit'
 
 SMS_TYPE_DELIVER = SmsTypeDeliver()
 SMS_TYPE_SUBMIT = SmsTypeSubmit()
 
 class Status(object):
-	aka = '?'
-	def __str__(self):
-		return self.aka
+    aka = '?'
+    def __str__(self):
+        return self.aka
 
 class StatusRead(Status):
-	aka = 'read'
+    aka = 'read'
 
 class StatusUnread(Status):
-	aka = 'unread'
+    aka = 'unread'
 
 class StatusSent(Status):
-	aka = 'unread'
+    aka = 'unread'
 
 class StatusUnsent(Status):
-	aka = 'unsent'
+    aka = 'unsent'
 
 STATUS_READ = StatusRead()
 STATUS_UNREAD = StatusUnread()
@@ -62,140 +62,140 @@ STATUS_SENT = StatusSent()
 STATUS_UNSENT = StatusUnsent()
 
 class Segment(Reader):
-	status_map = \
-	{
-		1: STATUS_READ,
-		3: STATUS_UNREAD,
-		5: STATUS_SENT,
-		7: STATUS_UNSENT
-	}
+    status_map = \
+    {
+        1: STATUS_READ,
+        3: STATUS_UNREAD,
+        5: STATUS_SENT,
+        7: STATUS_UNSENT
+    }
 
-	def __init__(self, file):
-		Reader.__init__(self, file)
-		self._offset = file.tell()
-		self.status = self.read_status()
-		self.smsc_address = self.read_address()
-		self.pdu = self.read_pdu()
-		self.read_waste()
+    def __init__(self, file):
+        Reader.__init__(self, file)
+        self._offset = file.tell()
+        self.status = self.read_status()
+        self.smsc_address = self.read_address()
+        self.pdu = self.read_pdu()
+        self.read_waste()
 
-	def read_pdu(self):
-		return Pdu(self._file)
+    def read_pdu(self):
+        return Pdu(self._file)
 
-	def read_status(self):
-		tp = self.next()
-		return self.status_map[tp]
+    def read_status(self):
+        tp = self.next()
+        return self.status_map[tp]
 
-	def read_waste(self):
-		nbytes = 176 - (self._file.tell() - self._offset)
-		bytes = self.next(nbytes)
-		if len(bytes) != nbytes:
-			raise CorruptedSmi
-		for byte in bytes:
-			if byte != 0xff:
-				raise CorruptedSmi
-		pass
+    def read_waste(self):
+        nbytes = 176 - (self._file.tell() - self._offset)
+        bytes = self.next(nbytes)
+        if len(bytes) != nbytes:
+            raise CorruptedSmi
+        for byte in bytes:
+            if byte != 0xff:
+                raise CorruptedSmi
+        pass
 
-	def __str__(self):
-		return 'X-Sms-Center: %s\n%s' % (self.smsc_address, self.pdu)
+    def __str__(self):
+        return 'X-Sms-Center: %s\n%s' % (self.smsc_address, self.pdu)
 
 class Smi(Reader):
-	smi_map = {}
-	sms_type_map = \
-	{
-		0: SMS_TYPE_DELIVER,
-		3: SMS_TYPE_SUBMIT
-	}
-	sms_status_map = \
-	{
-		0: STATUS_READ,
-		1: STATUS_UNREAD,
-		3: STATUS_SENT,
-		4: STATUS_UNSENT
-	}
+    smi_map = {}
+    sms_type_map = \
+    {
+        0: SMS_TYPE_DELIVER,
+        3: SMS_TYPE_SUBMIT
+    }
+    sms_status_map = \
+    {
+        0: STATUS_READ,
+        1: STATUS_UNREAD,
+        3: STATUS_SENT,
+        4: STATUS_UNSENT
+    }
 
-	have_waste_byte = True
+    have_waste_byte = True
 
-	@staticmethod
-	def register(*subclasses):
-		for subclass in subclasses:
-			Smi.smi_map[subclass.code] = subclass
+    @staticmethod
+    def register(*subclasses):
+        for subclass in subclasses:
+            Smi.smi_map[subclass.code] = subclass
 
-	def __new__(cls, file):
-		code = tuple(read_bytes(file, 5))
-		return object.__new__(Smi.smi_map[code], file)
+    def __new__(cls, file):
+        code = tuple(read_bytes(file, 5))
+        return object.__new__(Smi.smi_map[code], file)
 
-	def __init__(self, file):
-		Reader.__init__(self, file)
-		sms_parts = self.read_sms_parts()
-		self.sms_type = self.read_sms_type()
-		self.sms_status = self.read_sms_status()
-		self.sms_date = self.read_date()
-		self.read_waste_byte()
-		self.segments = [self.read_segment() for i in xrange(sms_parts)]
+    def __init__(self, file):
+        Reader.__init__(self, file)
+        sms_parts = self.read_sms_parts()
+        self.sms_type = self.read_sms_type()
+        self.sms_status = self.read_sms_status()
+        self.sms_date = self.read_date()
+        self.read_waste_byte()
+        self.segments = [self.read_segment() for i in xrange(sms_parts)]
 
-	def read_segment(self):
-		return Segment(self._file)
+    def read_segment(self):
+        return Segment(self._file)
 
-	def read_sms_parts(self):
-		n1, n2 = self.next(2)
-		if n1 != n2:
-			raise CorruptedSmi
-		else:
-			return n1
+    def read_sms_parts(self):
+        n1, n2 = self.next(2)
+        if n1 != n2:
+            raise CorruptedSmi
+        else:
+            return n1
 
-	def read_sms_type(self):
-		tp = self.next()
-		return self.sms_type_map[tp]
+    def read_sms_type(self):
+        tp = self.next()
+        return self.sms_type_map[tp]
 
-	def read_sms_status(self):
-		tp = self.next()
-		return self.sms_status_map[tp]
+    def read_sms_status(self):
+        tp = self.next()
+        return self.sms_status_map[tp]
 
-	def read_waste_byte(self):
-		pass
+    def read_waste_byte(self):
+        pass
 
-	def __str__(self):
-		return '\n'.join(
-		[
-			'X-Smi-Version: %d' % self.version,
-			'X-Sms-Type: %s' % self.sms_type,
-			'X-Sms-Status: %s' % self.sms_status,
-			'Date: %s' % self.sms_date
-		]) + '\n\n' + '\n\n'.join(str(segment) for segment in self.segments)
+    def __str__(self):
+        return '\n'.join(
+        [
+            'X-Smi-Version: %d' % self.version,
+            'X-Sms-Type: %s' % self.sms_type,
+            'X-Sms-Status: %s' % self.sms_status,
+            'Date: %s' % self.sms_date
+        ]) + '\n\n' + '\n\n'.join(str(segment) for segment in self.segments)
 
 class SmiSL4x(Smi):
-	version = 0
-	code = (11, 11, 0, 0, 0)
+    version = 0
+    code = (11, 11, 0, 0, 0)
 
-	def read_sms_parts(file):
-		return 1
+    def read_sms_parts(file):
+        return 1
 
-	def read_sms_type(self):
-		return None
+    def read_sms_type(self):
+        return None
 
-	def read_sms_status(self):
-		return None
+    def read_sms_status(self):
+        return None
 
-	have_timestamp = False
+    have_timestamp = False
 
 class SmiX45(Smi):
-	version = 1
-	code = (11, 11, 1, 1, 0)
+    version = 1
+    code = (11, 11, 1, 1, 0)
 
 class SmiX55(Smi):
-	version = 2
-	code = (11, 11, 2, 12, 0)
+    version = 2
+    code = (11, 11, 2, 12, 0)
 
-	def read_waste_byte(self):
-		self.next()
+    def read_waste_byte(self):
+        self.next()
 
 Smi.register(SmiSL4x, SmiX45, SmiX55)
 
 def main():
-	smi = Smi(stdin)
-	print smi
+    smi = Smi(stdin)
+    print smi
 
 if __name__ == '__main__':
-	main()
+    main()
 
-# vim:ts=4 sts=4 sw=4 noet
+# vim:ts=4 sts=4 sw=4 et
