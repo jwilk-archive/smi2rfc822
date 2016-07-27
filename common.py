@@ -40,7 +40,7 @@ class FixedOffsetTz(tzinfo):
 	ZERO = timedelta(0)
 
 	def __init__(self, offset):
-		self.__offset = timedelta(minutes = offset)
+		self.__offset = timedelta(minutes=offset)
 
 	def utcoffset(self, dt):
 		return self.__offset
@@ -62,9 +62,9 @@ class Reader(object):
 		if tz & 128:
 			-(tz & ~128)
 		tz = FixedOffsetTz(tz * 15)
-		return datetime(year, month, day, hour, minute, second, tzinfo = tz)
+		return datetime(year, month, day, hour, minute, second, tzinfo=tz)
 
-	def read_address(self, variant = False):
+	def read_address(self, variant=False):
 		nbytes = self.next()
 		if variant:
 			nbytes = 1 + (nbytes + 1) // 2
@@ -75,7 +75,7 @@ class Reader(object):
 		value = ''.join('%1x%1x' % ((x & 15), x >> 4) for x in self.next(nbytes - 1)).rstrip('f')
 		return Number(tp, value)
 
-	def next(self, nbytes = None):
+	def next(self, nbytes=None):
 		if nbytes is None:
 			return read_byte(self._file)
 		else:

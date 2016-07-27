@@ -70,7 +70,7 @@ class _Submit(Unit):
 	def __init__(self, file):
 		Unit.__init__(self, file)
 		self.update_first_byte()
-		self.sender = self.read_address(variant = True)
+		self.sender = self.read_address(variant=True)
 		self.pid = self.read_pid()
 		self.dcs = self.read_dcs()
 		self.date = self.read_date()
@@ -104,13 +104,13 @@ class _Deliver(Unit):
 			from datetime import timedelta
 			byte = self.next()
 			if byte <= 143:
-				return timedelta(minutes = (byte + 1) * 5)
+				return timedelta(minutes=((byte + 1) * 5))
 			elif byte <= 167:
-				return timedelta(hours = 12, minutes = (byte - 143) * 30)
+				return timedelta(hours=12, minutes=((byte - 143) * 30))
 			elif byte <= 196:
-				return timedelta(days = byte - 166)
+				return timedelta(days=(byte - 166))
 			else:
-				return timedelta(weeks = byte - 192)
+				return timedelta(weeks=(byte - 192))
 
 	class EnhancedVerifyFormat(VerifyFormat):
 		def read(self):
@@ -135,7 +135,7 @@ class _Deliver(Unit):
 		Unit.__init__(self, file)
 		self.update_first_byte()
 		self.reference_no = self.read_reference()
-		self.recipient = self.read_address(variant = True)
+		self.recipient = self.read_address(variant=True)
 		self.pid = self.read_pid()
 		self.dcs = self.read_dcs()
 		self.validity_period = self.read_validity_period()
