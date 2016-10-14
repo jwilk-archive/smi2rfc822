@@ -42,7 +42,7 @@ class DataCodingScheme(Reader):
             klass = DataCodingScheme.dcs_map[code]
         except KeyError:
             raise NotImplementedError('Unsupported Data Coding Scheme (0x%02d)' % byte)
-        return object.__new__(DataCodingScheme.dcs_map[code], file)
+        return object.__new__(klass, file)
 
 class Scheme7(DataCodingScheme):
     code = 0
