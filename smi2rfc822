@@ -22,7 +22,7 @@
 # SOFTWARE.
 
 from sys import stdin
-from common import Reader, CorruptedSmi, read_byte, read_bytes
+from common import Reader, CorruptedSmi, read_bytes
 from pdu import Unit as Pdu
 
 class SmsType(object):
